@@ -1,6 +1,6 @@
 # state-diagram
 
-> A Vue.js project
+> This is a implementation of http://bl.ocks.org/lgersman/5310854 in vuejs 2. The juicy part is in the component StateDiagram.vue
 
 ## Build Setup
 
