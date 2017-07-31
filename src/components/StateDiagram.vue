@@ -7,10 +7,14 @@
                 <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="#ccc">
                 </path>
             </marker>
+             <marker id="selfarrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 3.5" :refY="nodeRadius/5 - 20" orient="-105" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="strokeWidth" overflow="visible">
+                <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="#ccc">
+                </path>
+            </marker>
         </defs>
         <!--line displayed when dragging new nodes-->
         <!-- <path class="dragline" v-if="startState != undefined" :d="'M' + startState.x + ',' + startState.y + 'L' + dragLineEnd.x + ',' + dragLineEnd.y"></path> -->
-        <path v-for="eachLink in links" class="link" marker-end="url(#arrowhead)" :d="arcPath(true, eachLink)"></path>
+        <path v-for="eachLink in links" class="link" :marker-end="arrowHeadMaker(eachLink)" :d="arcPath(true, eachLink)"></path>
         <path v-for="eachLink in links" :id="textPathHref(eachLink)" class="invis" :d="arcPath2(eachLink)"></path>
         <g v-for="eachLink in links">
             <text class="pathLabel">
@@ -53,7 +57,7 @@ export default {
             ],
             links: [
                 { source: 'idle', target: 'moving', name: 'touchstart'},
-                // { source: 'moving', target: 'moving', name: 'touchmove'},
+                { source: 'moving', target: 'moving', name: 'touchmove'},
                 { source: 'moving', target: 'idle', name: 'touchend'},
             ]
         }
@@ -134,6 +138,9 @@ export default {
         // };
     },
     methods: {
+        arrowHeadMaker(eachLink) {
+            return eachLink.source == eachLink.target ? 'url(#selfarrowhead)' : 'url(#arrowhead)'
+        },
       siblingLinks(source, target) {
           var siblings = [];
           for(var i = 0; i < this.links.length; ++i){
@@ -171,6 +178,16 @@ export default {
                 siblingCount = this.siblingLinks(d.source, d.target).length,
                 xRotation = 0,
                 largeArc = 0;
+
+                if (dr === 0) {
+                    sweep = 0;
+                    xRotation = -130;
+                    largeArc = 1;
+                    drx = 50;
+                    dry = 40;
+                    x2 = x2 + 1;
+                    y2 = y2 + 1;
+                }
 
                 if (siblingCount > 1) {
                     var siblings = this.siblingLinks(d.source, d.target);
