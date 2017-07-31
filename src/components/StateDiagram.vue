@@ -196,17 +196,9 @@ export default {
           return siblings;
       },
       arcPath2(d) {
-        // let sourceNode = this.nodes.find(aNode => aNode.id == d.source);
-        // let targetNode = this.nodes.find(aNode => aNode.id == d.target)
-// debugger;
         return this.arcPath(d.source.x < d.target.x,d)
       },
         arcPath(leftHand, d) {
-            // debugger;
-
-            // let sourceNode = this.nodes.find(aNode => aNode.id == d.source)
-            // let targetNode = this.nodes.find(aNode => aNode.id == d.target)
-
             if (!d.source || !d.target) {
                 debugger
             }
@@ -236,18 +228,13 @@ export default {
                     y2 = y2 + 1;
                 }
 
-                console.log("siblingCount: "+siblingCount)
-
                 if (siblingCount > 1) {
-                    console.log(siblings);
+                    // console.log(siblings);
                     var arcScale = this.$d3.scalePoint()
                                         .domain(siblings)
                                         .range([1, siblingCount]);
-                    console.log(arcScale(d.name))
                     drx = drx/(1 + (1/siblingCount) * (arcScale(d.name) - 1));
                     dry = dry/(1 + (1/siblingCount) * (arcScale(d.name) - 1));
-                    console.log("drx: "+drx)
-                    console.log("drx: "+dry)
                 }
 
             return "M" + x1 + "," + y1 + "A" + drx + ", " + dry + " " + xRotation + ", " + largeArc + ", " + sweep + " " + x2 + "," + y2;
@@ -270,13 +257,13 @@ export default {
         //         targetY = d.target.y - (targetPadding * normY);
         //     return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         // },
-        mouseDownOnOuterCircle(aState) {
-            if (aState.isSelected) {
-              this.startState = aState;
-              this.dragLineEnd = {x:aState.x,y:aState.y}
-              this.endState = undefined;
-            }
-        },
+        // mouseDownOnOuterCircle(aState) {
+        //     if (aState.isSelected) {
+        //       this.startState = aState;
+        //       this.dragLineEnd = {x:aState.x,y:aState.y}
+        //       this.endState = undefined;
+        //     }
+        // },
         // mouseDownOnInnerCircle(aState,event) {
         //     aState.isSelected = true
 
