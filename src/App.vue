@@ -41,13 +41,27 @@ circle {
 path.link, path.textpath {
     fill: none;
     stroke: #cccccc;
-    stroke-width: 0.5px;
+    stroke-width: 1px;
 }
+
+path.link.selected{
+    stroke-width: 4px;
+    stroke: red
+}
+
 path.invis {
     fill: none;
     stroke-width: 0;
 }
 .textClass {
-    font-size: 25px;
+    font-size: 30px;
+}
+.pathLabel {
+    font-size: 20px;
+    user-select: none;
+}
+.pathLabel.selected {
+    font-size: 30px;
+    fill: red
 }
 </style>

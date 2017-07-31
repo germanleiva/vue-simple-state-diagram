@@ -3,22 +3,30 @@
     <svg id="svg" width="1024px" height="900px">
         <!--define arrow markers for graph links-->
         <defs>
-             <marker id="arrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 3.5" :refY="nodeRadius/5" orient="auto" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="strokeWidth" overflow="visible">
+             <marker id="arrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 2.4" :refY="nodeRadius/20" orient="auto" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="userSpaceOnUse" overflow="visible">
                 <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="#ccc">
                 </path>
             </marker>
-             <marker id="selfarrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 3.5" :refY="nodeRadius/5 - 20" orient="-105" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="strokeWidth" overflow="visible">
+             <marker id="arrowhead-selected" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 2.4" :refY="nodeRadius/20" orient="auto" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="userSpaceOnUse" overflow="visible">
+                <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="red">
+                </path>
+            </marker>
+             <marker id="selfarrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 2.4" :refY="nodeRadius/5 - 9" orient="-110" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="userSpaceOnUse" overflow="visible">
                 <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="#ccc">
+                </path>
+            </marker>
+             <marker id="selfarrowhead-selected" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 2.4" :refY="nodeRadius/5 - 9" orient="-110" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="userSpaceOnUse" overflow="visible">
+                <path :d="`M0,-${arrowSize/2}L${arrowSize},0L0,${arrowSize/2}z`" fill="red">
                 </path>
             </marker>
         </defs>
         <!--line displayed when dragging new nodes-->
         <!-- <path class="dragline" v-if="startState != undefined" :d="'M' + startState.x + ',' + startState.y + 'L' + dragLineEnd.x + ',' + dragLineEnd.y"></path> -->
-        <path v-for="eachLink in links" class="link" :marker-end="arrowHeadMaker(eachLink)" :d="arcPath(true, eachLink)"></path>
+        <path v-for="eachLink in links" class="link" :class="{selected:eachLink.isSelected}" :marker-end="arrowHeadMaker(eachLink)" :d="arcPath(true, eachLink)" @click.prevent="toggleLink(eachLink)"></path>
         <path v-for="eachLink in links" :id="textPathHref(eachLink)" class="invis" :d="arcPath2(eachLink)"></path>
         <g v-for="eachLink in links">
-            <text class="pathLabel">
-                <textPath startOffset="50%" text-anchor="middle" :href="'#'+textPathHref(eachLink)" syle="fill:#cccccc;font-size:20">{{eachLink.name}}</textPath>
+            <text class="pathLabel" :class="{selected:eachLink.isSelected}" dy="-5" @click.prevent="toggleLink(eachLink)">
+                <textPath startOffset="50%" text-anchor="middle" :href="'#'+textPathHref(eachLink)" syle="fill:#cccccc;font-size:50px">{{eachLink.name}}</textPath>
             </text>
         </g>
         <g v-for="eachState in nodes" :key="eachState.id" class="node" :transform="'translate(' + eachState.x + ',' + eachState.y + ')'">
@@ -52,13 +60,13 @@ export default {
     data() {
         return {
             nodes: [
-                { id: 'idle', name: 'Idle', x:20, y:30},
-                { id: 'moving', name: 'Moving', x:30, y:50}
+                { id: 'idle', name: 'Idle', x:0, y:0},
+                { id: 'moving', name: 'Moving', x:0, y:0}
             ],
             links: [
-                { source: 'idle', target: 'moving', name: 'touchstart'},
-                { source: 'moving', target: 'moving', name: 'touchmove'},
-                { source: 'moving', target: 'idle', name: 'touchend'},
+                { source: 'idle', target: 'moving', name: 'touchstart', isSelected: false},
+                { source: 'moving', target: 'moving', name: 'touchmove', isSelected: false},
+                { source: 'moving', target: 'idle', name: 'touchend', isSelected: false},
             ]
         }
     },
@@ -138,8 +146,18 @@ export default {
         // };
     },
     methods: {
+        toggleLink(aLink) {
+            for (let eachLink of this.links) {
+                eachLink.isSelected = eachLink == aLink
+            }
+        },
         arrowHeadMaker(eachLink) {
-            return eachLink.source == eachLink.target ? 'url(#selfarrowhead)' : 'url(#arrowhead)'
+            let name = eachLink.source == eachLink.target ? '#selfarrowhead' : '#arrowhead'
+            let suffix = ""
+            if (eachLink.isSelected) {
+                suffix = "-selected"
+            }
+            return `url(${name}${suffix})`
         },
       siblingLinks(source, target) {
           var siblings = [];
@@ -183,8 +201,8 @@ export default {
                     sweep = 0;
                     xRotation = -130;
                     largeArc = 1;
-                    drx = 50;
-                    dry = 40;
+                    drx = 60;
+                    dry = 50;
                     x2 = x2 + 1;
                     y2 = y2 + 1;
                 }
