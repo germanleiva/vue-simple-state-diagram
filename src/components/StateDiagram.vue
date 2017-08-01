@@ -1,5 +1,4 @@
 <template>
-    <!-- <svg id="svg" width="960px" height="500px" @mousedown="canvasMouseDown" @mousemove="canvasMouseMove" @mouseup="canvasMouseUp" @dblclick="canvasDoubleClick"> -->
     <svg id="svg" width="1024px" height="900px" @dblclick.prevent="canvasDoubleClick">
         <!--define arrow markers for graph links-->
         <defs>
@@ -28,11 +27,11 @@
                 <textPath startOffset="50%" text-anchor="middle" :href="'#'+invisiblePath(eachLink)" syle="fill:#cccccc;font-size:50px">{{eachLink.name}}</textPath>
             </text>
         </g>
-        <g v-for="eachNode in nodes" :key="eachNode.id" :transform="'translate(' + eachNode.x + ',' + eachNode.y + ')'">
+        <g v-for="eachNode in nodes" :key="eachNode.id" :transform="'translate(' + eachNode.x + ',' + eachNode.y + ')'" class="node" :class="{selected:eachNode.isSelected}">
             <!-- <circle r="50" class="outer" @mousedown="mouseDownOnOuterCircle(eachNode)"></circle> -->
 
             <!-- <circle r="40" class="inner" @mousedown="mouseDownOnInnerCircle(eachNode,$event)" @mouseup="mouseUpOnInnerCircle(eachNode,$event)" @mouseover="eachNode.isHovered = true" @mouseout="eachNode.isHovered = false"></circle> -->
-            <circle :id="'Node;'+eachNode.id" :r="nodeRadius" class="node" :class="{selected:eachNode.isSelected}" @click.prevent="toggleNode(eachNode)"></circle>
+            <circle :id="'Node;'+eachNode.id" :r="nodeRadius" @click.prevent="toggleNode(eachNode)"></circle>
             <text class="nodeTextClass" x="20" y=".31em" @click.prevent="toggleNode(eachNode)">{{eachNode.name}}</text>
 
             <!-- <text text-anchor="middle" y="4">{{eachNode.name}}</text> -->
@@ -260,13 +259,18 @@ text {
 }
 
 .node {
+    cursor:pointer;
+}
+
+.node circle {
     stroke: white;
     stroke-width: 1.5px;
     fill:#0db7ed;
 }
 
-.node.selected {
+.node.selected circle {
     fill:red;
+    cursor:default;
 }
 
 path.link, path.textpath {
@@ -284,94 +288,30 @@ path.invis {
     fill: none;
     stroke-width: 0;
 }
+
 .nodeTextClass {
-    font-size: 30px;
+    font-size: 20px;
+    cursor: pointer;
 }
+.selected > .nodeTextClass {
+    font-size: 30px;
+    fill: red;
+    cursor: default;
+}
+
 .linkLabel {
     font-size: 20px;
-    user-select: none;
+    cursor: pointer;
 }
 .linkLabel.selected {
     font-size: 30px;
-    fill: red
+    fill: red;
+    cursor: default;
 }
 .dragline {
     fill: none;
     stroke: #000;
     stroke-width: 1px;
-    /*cursor: default;*/
-    /*marker-end: url(#arrowhead);*/
 }
 
-/* #app {
-   font-family: 'Avenir', Helvetica, Arial, sans-serif;
-   -webkit-font-smoothing: antialiased;
-   -moz-osx-font-smoothing: grayscale;
-   text-align: center;
-   color: #2c3e50;
-   margin-top: 60px;
- }*/
-
-/*rect.selection {
-    stroke: gray;
-    stroke-dasharray: 4px;
-    stroke-opacity: 0.5;
-    fill: transparent;
-}
-
-g.state circle {
-    stroke: gray;
-    cursor: pointer;
-}
-
-g.state circle.inner {
-    fill: white;
-}
-
-g.state.hover circle.inner {
-    fill: aliceblue;
-}
-
-g.state circle.outer {
-    stroke-width: 0px;
-    stroke-dasharray: 4px;
-    stroke-opacity: 0.5;
-    fill: transparent;
-}
-
-g.state.selected circle.outer {
-    stroke-width: 1px;
-}
-
-g.state text {
-    font: 12px sans-serif;
-    font-weight: bold;
-    pointer-events: none;
-}
-
-path.transition,
-path.dragline {
-    fill: none;
-    stroke: #000;
-    stroke-width: 1px;
-    cursor: default;
-    marker-end: url(#end-arrow);
-}
-
-path.dragline {
-    pointer-events: none;
-}
-
-// disable text selection
-svg *::selection {
-    background: transparent;
-}
-
-svg *::-moz-selection {
-    background: transparent;
-}
-
-svg *::-webkit-selection {
-    background: transparent;
-}*/
 </style>
