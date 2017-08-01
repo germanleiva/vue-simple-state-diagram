@@ -17,13 +17,13 @@ export default {
     data() {
         return {
             states: [
-                // { id: 'idle', name: 'Idle', x:0, y:0},
-                // { id: 'moving', name: 'Moving', x:0, y:0}
+                { id: 'idle', name: 'Idle', x:0, y:0, isSelected: false},
+                { id: 'moving', name: 'Moving', x:0, y:0, isSelected: false}
             ],
             edges: [
-                // { source: 'idle', target: 'moving', name: 'touchstart', isSelected: false},
-                // { source: 'moving', target: 'moving', name: 'touchmove', isSelected: false},
-                // { source: 'moving', target: 'idle', name: 'touchend', isSelected: false},
+                { source: 'idle', target: 'moving', name: 'touchstart', isSelected: false},
+                { source: 'moving', target: 'moving', name: 'touchmove', isSelected: false},
+                { source: 'moving', target: 'idle', name: 'touchend', isSelected: false},
             ]
         }
     },
@@ -38,39 +38,5 @@ export default {
 body {
   background: #384d54;
 }
-text {
-    fill: white;
-    font-family: 'Open Sans';
-    user-select: none;
-}
-circle {
-  stroke: white;
-  stroke-width: 1.5px;
-}
-path.link, path.textpath {
-    fill: none;
-    stroke: #cccccc;
-    stroke-width: 1px;
-}
 
-path.link.selected{
-    stroke-width: 4px;
-    stroke: red
-}
-
-path.invis {
-    fill: none;
-    stroke-width: 0;
-}
-.textClass {
-    font-size: 30px;
-}
-.pathLabel {
-    font-size: 20px;
-    user-select: none;
-}
-.pathLabel.selected {
-    font-size: 30px;
-    fill: red
-}
 </style>

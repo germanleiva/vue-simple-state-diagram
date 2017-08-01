@@ -1,6 +1,6 @@
 <template>
     <!-- <svg id="svg" width="960px" height="500px" @mousedown="canvasMouseDown" @mousemove="canvasMouseMove" @mouseup="canvasMouseUp" @dblclick="canvasDoubleClick"> -->
-    <svg id="svg" width="1024px" height="900px" @dblclick="canvasDoubleClick">
+    <svg id="svg" width="1024px" height="900px" @dblclick.prevent="canvasDoubleClick">
         <!--define arrow markers for graph links-->
         <defs>
              <marker id="arrowhead" :viewBox="`0 -${arrowSize/2} ${arrowSize} ${arrowSize}`" :refX="nodeRadius * 2.4" :refY="nodeRadius/20" orient="auto" :markerWidth="arrowSize" :markerHeight="arrowSize" markerUnits="userSpaceOnUse" overflow="visible">
@@ -22,18 +22,18 @@
         </defs>
         <!--line displayed when dragging new nodes-->
         <path v-for="eachLink in links" class="link" :class="{selected:eachLink.isSelected}" :marker-end="arrowHeadMaker(eachLink)" :d="arcPath(true, eachLink)" @click.prevent="toggleLink(eachLink)"></path>
-        <path v-for="eachLink in links" :id="invisiblePath(eachLink)" class="invis" :d="arcPath2(eachLink)"></path>
+        <path v-for="eachLink in links" :id="invisiblePath(eachLink)" class="invis" :d="arcPath(eachLink.source.x < eachLink.target.x,eachLink)"></path>
         <g v-for="eachLink in links">
-            <text class="pathLabel" :class="{selected:eachLink.isSelected}" dy="-5" @click.prevent="toggleLink(eachLink)">
+            <text class="linkLabel" :class="{selected:eachLink.isSelected}" dy="-5" @click.prevent="toggleLink(eachLink)">
                 <textPath startOffset="50%" text-anchor="middle" :href="'#'+invisiblePath(eachLink)" syle="fill:#cccccc;font-size:50px">{{eachLink.name}}</textPath>
             </text>
         </g>
-        <g v-for="eachNode in nodes" :key="eachNode.id" class="node" :transform="'translate(' + eachNode.x + ',' + eachNode.y + ')'">
+        <g v-for="eachNode in nodes" :key="eachNode.id" :transform="'translate(' + eachNode.x + ',' + eachNode.y + ')'">
             <!-- <circle r="50" class="outer" @mousedown="mouseDownOnOuterCircle(eachNode)"></circle> -->
 
             <!-- <circle r="40" class="inner" @mousedown="mouseDownOnInnerCircle(eachNode,$event)" @mouseup="mouseUpOnInnerCircle(eachNode,$event)" @mouseover="eachNode.isHovered = true" @mouseout="eachNode.isHovered = false"></circle> -->
-            <circle :id="'Node;'+eachNode.id" :r="nodeRadius" class="nodeStrokeClass" fill="#0db7ed"></circle>
-            <text class="textClass" x="20" y=".31em">{{eachNode.name}}</text>
+            <circle :id="'Node;'+eachNode.id" :r="nodeRadius" class="node" :class="{selected:eachNode.isSelected}" @click.prevent="toggleNode(eachNode)"></circle>
+            <text class="nodeTextClass" x="20" y=".31em" @click.prevent="toggleNode(eachNode)">{{eachNode.name}}</text>
 
             <!-- <text text-anchor="middle" y="4">{{eachNode.name}}</text> -->
             <!-- <title>{{eachNode.name}}</title> -->
@@ -66,25 +66,12 @@ export default {
         return {
             simulation: undefined,
             startState: undefined,
-            dragLineEnd: undefined
+            dragLineEnd: undefined,
+            nodeRadius: 20,
+            arrowSize: 30
         }
     },
     computed: {
-        nodeRadius() {
-            return 20;
-        },
-        arrowSize() {
-            return 30;
-        },
-        // links() {
-        //     return this.nodes.reduce(function (initial, state) {
-        //         return initial.concat(
-        //             state.links//.map(function (transition) {
-        //             //     return { source: state, target: transition.target };
-        //             // })
-        //         );
-        //     }, []);
-        // }
         dragLinePath() {
             return 'M' + this.startState.x + ',' + this.startState.y + 'L' + this.dragLineEnd.x + ',' + this.dragLineEnd.y
         }
@@ -113,7 +100,9 @@ export default {
         let container = document.querySelector("svg");
 
         function dragsubject() {
-            let result = this.simulation.find(this.$d3.event.x, this.$d3.event.y,this.nodeRadius);
+            let e = this.$d3.event
+            //nodeRadius constraint drag to the nodes and not the rest of the container (e.g edges)
+            let result = this.simulation.find(e.x, e.y,this.nodeRadius);
             return result;
         }
         function dragstarted() {
@@ -146,7 +135,7 @@ export default {
                 let endState = this.simulation.find(e.x, e.y,this.nodeRadius);
 
                 if (endState) {
-                    let newLink = {source: this.startState.id, target: endState.id, name: 'unnamed'+this.links.length, isSelected:false}
+                    let newLink = {source: this.startState.id, target: endState.id, name: 'unnamed '+this.links.length, isSelected:false}
                     this.links.push(newLink)
 
                     //To force an update
@@ -174,7 +163,18 @@ export default {
         // };
     },
     methods: {
+        toggleNode(aNode) {
+            for (let eachLink of this.links) {
+                eachLink.isSelected = false
+            }
+            for (let eachNode of this.nodes) {
+                eachNode.isSelected = eachNode == aNode
+            }
+        },
         toggleLink(aLink) {
+            for (let eachNode of this.nodes) {
+                eachNode.isSelected = false
+            }
             for (let eachLink of this.links) {
                 eachLink.isSelected = eachLink == aLink
             }
@@ -187,17 +187,6 @@ export default {
             }
             return `url(${name}${suffix})`
         },
-      siblingLinks(source, target) {
-          var siblings = [];
-          for(var i = 0; i < this.links.length; ++i){
-              if( (this.links[i].source.id == source.id && this.links[i].target.id == target.id) || (this.links[i].source.id == target.id && this.links[i].target.id == source.id) )
-                  siblings.push(this.links[i].name);
-          };
-          return siblings;
-      },
-      arcPath2(d) {
-        return this.arcPath(d.source.x < d.target.x,d)
-      },
         arcPath(leftHand, d) {
             if (!d.source || !d.target) {
                 debugger
@@ -239,130 +228,19 @@ export default {
 
             return "M" + x1 + "," + y1 + "A" + drx + ", " + dry + " " + xRotation + ", " + largeArc + ", " + sweep + " " + x2 + "," + y2;
         },
+        siblingLinks(source, target) {
+          var siblings = [];
+          for(var i = 0; i < this.links.length; ++i){
+              if( (this.links[i].source.id == source.id && this.links[i].target.id == target.id) || (this.links[i].source.id == target.id && this.links[i].target.id == source.id) )
+                  siblings.push(this.links[i].name);
+          };
+          return siblings;
+        },
         invisiblePath(aLink) {
             return "invis_" + aLink.source.id + "-" + aLink.name + "-" + aLink.target.id;
         },
-        // // http://www.dashingd3js.com/svg-paths-and-d3js
-        // computeTransitionPath: /*d3.svg.diagonal.radial()*/function (d) {
-        //     var deltaX = d.target.x - d.source.x,
-        //         deltaY = d.target.y - d.source.y,
-        //         dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-        //         normX = deltaX / dist,
-        //         normY = deltaY / dist,
-        //         sourcePadding = radius + 2,//d.left ? 17 : 12,
-        //         targetPadding = radius + 6,//d.right ? 17 : 12,
-        //         sourceX = d.source.x + (sourcePadding * normX),
-        //         sourceY = d.source.y + (sourcePadding * normY),
-        //         targetX = d.target.x - (targetPadding * normX),
-        //         targetY = d.target.y - (targetPadding * normY);
-        //     return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-        // },
-        // mouseDownOnOuterCircle(aState) {
-        //     if (aState.isSelected) {
-        //       this.startState = aState;
-        //       this.dragLineEnd = {x:aState.x,y:aState.y}
-        //       this.endState = undefined;
-        //     }
-        // },
-        // mouseDownOnInnerCircle(aState,event) {
-        //     aState.isSelected = true
-
-        //     if (this.startState) {
-        //         return;
-        //     }
-
-        //     this.previousPosition.x = event.pageX
-        //     this.previousPosition.y = event.pageY
-
-        //     this.draggedState = aState
-
-        //     //This is to move the state at the end of the list, thus putting on top of all the other states
-        //     //Remove element
-        //     var index = this.nodes.indexOf(aState);
-        //     if (index > -1) {
-        //         this.nodes.splice(index, 1);
-        //     }
-        //     //Add element at the end
-        //     this.nodes.push(aState)
-        // },
-        // mouseUpOnInnerCircle(aState,event) {
-        //     this.previousPosition.x = 0
-        //     this.previousPosition.y = 0
-
-        //     if( this.startState && this.endState) {
-        //         this.startState.transitions.push( { name : "transition name 1", target : this.endState});
-        //     }
-
-        //     this.startState = undefined
-        //     this.dragLineEnd = undefined
-        //     this.draggedState = undefined
-        // },
-        // canvasMouseDown(event) {
-        //     if( !event.shiftKey) {
-        //         for (let eachNode of this.nodes) {
-        //             if (eachNode != this.draggedState)
-        //                 eachNode.isSelected = false
-        //         }
-        //         return
-        //     }
-
-        //     this.selectionRectangle = {rx:6,ry:6,x:event.pageX,y:event.pageY,width:0,height:0}
-        // },
-        // canvasMouseMove(event) {
-        //     if( this.selectionRectangle) {
-        //         let move = {x: event.pageX - this.selectionRectangle.x , y: event.pageY - this.selectionRectangle.y }
-
-        //         if( move.x < 1 || (move.x*2<this.selectionRectangle.width)) {
-        //             this.selectionRectangle.x = event.pageX;
-        //             this.selectionRectangle.width -= move.x;
-        //         } else {
-        //             this.selectionRectangle.width = move.x;
-        //         }
-
-        //         if( move.y < 1 || (move.y*2<this.selectionRectangle.height)) {
-        //             this.selectionRectangle.y = event.pageY;
-        //             this.selectionRectangle.height -= move.y;
-        //         } else {
-        //             this.selectionRectangle.height = move.y;
-        //         }
-
-        //         // deselect all temporary selected state objects
-        //         for (let eachNode of this.nodes) {
-        //             // inner circle inside selection frame
-        //             eachNode.isSelected = false
-
-        //             //xInside && yInside
-        //             if (eachNode.x-radius>=this.selectionRectangle.x && eachNode.x+radius<=this.selectionRectangle.x+this.selectionRectangle.width &&
-        //                 eachNode.y-radius>=this.selectionRectangle.y && eachNode.y+radius<=this.selectionRectangle.y+this.selectionRectangle.height) {
-        //                 eachNode.isSelected = true
-        //             }
-        //         }
-        //     } else if (this.startState) {
-        //         //update drag line
-        //         this.dragLineEnd.x = event.pageX
-        //         this.dragLineEnd.y = event.pageY
-
-        //         for (let eachNode of this.nodes) {
-        //             if (eachNode.isHovered) {
-        //                 this.endState = eachNode;
-        //                 continue;
-        //             }
-        //         }
-
-        //     } else if (this.draggedState) {
-        //         this.draggedState.x += event.pageX - this.previousPosition.x;
-        //         this.draggedState.y += event.pageY - this.previousPosition.y;
-
-        //         this.previousPosition.x =  event.pageX
-        //         this.previousPosition.y =  event.pageY
-        //     }
-        // },
-        // canvasMouseUp(event) {
-        //     this.selectionRectangle = undefined
-        // },
         canvasDoubleClick(event) {
             let newState = {id: `${this.nodes.length}`, name: 'new state', x:event.pageX, y:event.pageY};
-            // debugger;
             this.nodes.push(newState);
 
             //To force an update
@@ -373,7 +251,50 @@ export default {
 
 </script>
 
-<style >
+<style scoped>
+
+text {
+    fill: white;
+    font-family: 'Open Sans';
+    user-select: none;
+}
+
+.node {
+    stroke: white;
+    stroke-width: 1.5px;
+    fill:#0db7ed;
+}
+
+.node.selected {
+    fill:red;
+}
+
+path.link, path.textpath {
+    fill: none;
+    stroke: #cccccc;
+    stroke-width: 1px;
+}
+
+path.link.selected{
+    stroke-width: 4px;
+    stroke: red
+}
+
+path.invis {
+    fill: none;
+    stroke-width: 0;
+}
+.nodeTextClass {
+    font-size: 30px;
+}
+.linkLabel {
+    font-size: 20px;
+    user-select: none;
+}
+.linkLabel.selected {
+    font-size: 30px;
+    fill: red
+}
 .dragline {
     fill: none;
     stroke: #000;
